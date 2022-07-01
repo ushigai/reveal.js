@@ -4,11 +4,11 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>6月報告</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/serif.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
@@ -16,8 +16,501 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+
+<section><h1>6月報告</h1></section>
+
+<section>
+	<section><h2>特定のユーザのツイートを検索</h2></section>
+	<section>
+		<h3>@bomccssさんのTLを取得</h3>
+		<pre><code .bash data-line-numbers="">from TWITTERAPIKEY import consumer_key, consumer_secret, \
+                            access_token, access_token_secret
+import tweepy
+
+auth = tweepy.OAuthHandler(consumer_key,consumer_secret)
+auth.set_access_token(access_token,access_token_secret)
+api = tweepy.API(auth)
+
+L = [tweet.text for tweet in tweepy.Cursor(api.user_timeline, id="bomccss").items(100) if (list(tweet.text)[:2]!=['R', 'T']) & (list(tweet.text)[0]!='@')]
+
+for l in L:
+    if "件名" in l:
+        print(l)
+    else:
+        continue
+        print(l)
+    print("-*-*-*-*-*-*-*-*-*-*")
+</code></pre>
+	</section>
+	<section>
+		<h3>実行結果</h3>
+		<pre><code .bash data-line-numbers="">ほげ</code></pre>
+	</section>
+</section>
+
+<section>
+	<section><h2>Dアラート調査</h2></section>
+	<section>
+		<h3>ソースコード</h3>
+		<pre><code .bash data-line-numbers="">from urllib import request
+import re
+from time import sleep
+
+month = 4
+year = 2022
+bid = 206
+url = f"https://www.daj.jp/bs/d-alert/bref/?bid={bid}&year={year}&month={month}"
+url = f"https://www.daj.jp/bs/d-alert/bref/?bid={bid}"
+S = request.urlopen(url).read().decode()
+
+def isHex(n):
+    try:
+        int(n, 16)
+        if 65 != len(n):
+            return False
+        return True
+    except ValueError:
+        return False
+
+if "表示する内容はありません" in S:
+    exit("ぴえん")
+S = S.split("\n")
+for s in S:
+    if isHex(s):
+        print(s)
+
+for s in S:
+    if "hxxp" in s:
+        print(s)
+
+for s in S:
+    res = re.search("\d{4}/\d{2}/\d{2}", s)
+    if res:
+        print(res[0])
+
+print(url)
+</code></pre>
+	</section>
+	<section>
+		<h3>実行結果</h3>
+		<pre><code data-line-numbers="1|2-12|13-19">$ python3 Dalert.py
+003e2c71473d513ffd9565ec44b0aeec9fd83bbff55184eff51fdc1c4936b41b
+026607bacb3648d898102b7e0a7440b44e1610f8faeccafff1fc65042f347561
+029ec249a72dac535d2f73972d981e09094f934c774e0891aaaa3ae00d7337e1
+02e4db89967bb8b8f8dda57b44fa57b016aeb10a04689628c43dbb8ee3d2e77c
+
+    << snip >>
+
+fe2646a9dc0f4f7970c76b95afe85fc117c497376b6a32780e035af515f711b4
+fe7dfb69c1cbb0f3893920524b75e2d2a102de67aab4a3a87336d00583c7f990
+fef492cdcb137bfbc1fe023196ed52eba1b402089f640fbed525c93a3074c311
+ff1fe63f4662a3cface20034a5d1dec65440d3b06e627c9d432aa35b851629c9
+hxxp://centaurussits[.]com/assets/FL/
+hxxp://cansal[.]cl/cgi-bin/besSIJTfOk0DtHZR/
+
+    << snip >>
+
+hxxps://ceramicalafortaleza[.]com/css/5DSBCCH0/
+hxxp://thuybaohuy[.]com/wp-content/VxhkYwH7/
+2022/06/16
+2022/06/21
+https://www.daj.jp/bs/d-alert/bref/?bid=215
+</code></pre>
+    <a href="https://www.daj.jp/bs/d-alert/bref/?bid=215">https://www.daj.jp/bs/d-alert/bref/?bid=215</a>
+	</section>
+</section>
+
+<section>
+	<section><h2>情報基盤センタースクレイピング</h2></section>
+	<section>
+		<h3>ソースコード</h3>
+		<pre><code data-line-numbers="">from urllib import request
+import re
+from time import sleep
+
+year, month, day = "2021", "06", "16"
+url = f"https://www.cc.uec.ac.jp/blogs/news/{year}/{month}/{year}{month}{day}emailphishing.html"
+
+url = "https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209emotet.html"
+
+for i in range(30):
+    print("-*-*-*-*-*-*-*-*-*-")
+    try:
+        S = request.urlopen(url).read().decode()
+    except:
+        exit("hoge")
+    S = S.split("\n")
+    print("URL :", url)
+    #print("Date :", url.split("/")[7][:8])
+    going = 1
+    subjects = []
+    for s in S:
+        if "prev" in s:
+            nextURL = re.search("http.*html", s)
+            url = nextURL[0]
+        if "Subject:" in s:
+            subjects.append(s)
+        if re.search("[0-9a-f]{30}", s):
+            if going:
+                for sub in subjects:
+                    print("Subject :", sub)
+                going = 0
+            p = r'<td>(.+?)</td>'
+            FileName, HashValue = re.findall(p, s)
+            ret = re.findall(p, s)
+            print("File Name :", FileName)
+            print("Hash Value :", HashValue)
+</code></pre>
+	</section>
+	<section>
+		<h3>実行結果</h3>
+		<pre><code data-line-numbers="">-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209emotet.html
+Subject: 
+Subject: Fw: Re: ○○○○お問い合わせの件
+Subject: Fwd:（メールアドレス）
+Subject: Fwd:(漢字人名)
+
+    << snip >>
+
+File Name : report 02 09 2022.xls
+Hash Value : 189df8e1550d911be88ced771a3efbebdc412676
+File Name : KH-2278 report.xls
+Hash Value : 28f3ebddd73483b2b5f154437f5ff9e7bcd8bfb4
+
+    << snip >>
+
+File Name : 2022-02-09_1827.xls
+Hash Value : d91a9a8c5cd1318ccdb0d1eafa61189989a95a81
+File Name : 2022-02-09_1856.xls
+Hash Value : 9f482a6fd9f692b663bafafdbef1ba1d794135aa
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/ssl-vpn-1.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/217-1800-1830.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209amazonphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209mercariphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209jcbphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209eposcardphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209rakutenphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209etcphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209saisoncardphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208emotet.html
+Subject: 
+Subject: Aw: (ローマ字人名) ...........
+Subject: Distributed and parallel algorithms http://www.mapgis.click/1/
+Subject: Fwd:
+
+    << snip >>
+
+Subject: Re: (ローマ字人名)
+Subject: Re: h6
+Subject: Re: ○○○○係・○○○○○係
+Subject:[SPAM] V-Message Received From Caller 70*-()-***
+File Name : YZ-2793 report.xls
+Hash Value : 00589d5bf467a294014c64805fadf2e470244d38
+File Name : 2022-02-08_1639.xls
+Hash Value : 0a8862d04f95ebc203f7af4fffc13c916c9beb2f
+
+    << snip >>
+
+File Name : 84437309558871401.xls
+Hash Value : 175de6c4042710cc3241cee9ce25c42ec34808cb
+File Name : 2022-02-08_1150.xls
+Hash Value : a180ceb46a6dc7e7928b01939a01ec33bf5b4cee
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208scammail.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208amazonphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208jcbphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208rakutenphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208mastercardphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220208ubereatsphishiing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207vpn.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207amazonphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207mercariphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207viewcardphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207jcbphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207smbcbankphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207jaccsphishing.html
+-*-*-*-*-*-*-*-*-*-
+URL : https://www.cc.uec.ac.jp/blogs/news/2022/02/20220207mufgphishing.html
+</code></pre>
+    <a href="https://www.cc.uec.ac.jp/blogs/news/2022/02/20220209emotet.html">2022/02/20220209emotet.html</a>
+	</section>
+</section>
+
+<section>
+	<section><h2>デイリーえもえもえもてっと</h2></section>
+	<section>
+		<h3>@abel1maさんのTL検索</h3>
+		ソースコード
+		<pre><code data-line-numbers="">from TWITTERAPIKEY import consumer_key, consumer_secret, \
+                            access_token, access_token_secret
+from getRedirect import GetRedirectUrl # https://qiita.com/niwasawa/items/d3f5ceb5f2f9d8784571
+import tweepy
+import re
+from urllib import request
+
+
+def Analyze(url):
+    """
+    hash値が一部表記ゆれしちゃいそう
+    """
+    S = request.urlopen(url).read().decode()
+    S = S.split("\n")
+    ans = ""
+    for s in S:
+        if "textarea valuebox name=\"name\" rows" in s:
+            s = s.split("&#10;")[:-1]
+            for i in s:
+                ans += i.split(">")[-1] + "\n"
+    ans1 = ans
+    S = request.urlopen(url).read().decode()
+    S = S.split("\n")
+    ans = []
+    going = 4
+    for i, s in enumerate(S):
+        if any([hash in s for hash in ["MD5", "SHA1", "SHA256", "SHA512"]]):
+            ans.append(S[i+3].strip())
+            going -= 1
+        if not going:
+            break
+    return ans1, ans
+
+
+auth = tweepy.OAuthHandler(consumer_key,consumer_secret)
+auth.set_access_token(access_token,access_token_secret)
+api = tweepy.API(auth)
+
+print("-*-*-*-*-*-*-*-*-*-*-*-*-*-")
+
+N = 100
+L = [tweet.text for tweet in tweepy.Cursor(api.user_timeline,  id="abel1ma").items(N) if (list(tweet.text)[:2]!=['R', 'T']) & (list(tweet.text)[0]!='@')]
+
+URLpattern = r"https?://[\w!?/+\-_~;.,*&@#$%()'[\]]+"
+
+for l in L:
+    date = re.search("[0-9]+月[0-9]+日", l)
+    URLs = re.findall(URLpattern, l)
+    if date:
+        print("日付：", date[0])
+        print("ツイート本文：")
+        print(l)
+        for ll in l.split("\n"):
+            print("    ", ll)
+        print("添付URL：")
+        for url in URLs:
+            url = GetRedirectUrl(url)
+            if "tria.ge" in url:
+                print("    ", url)
+                print("通信先C2サーバ：")
+                c2addr, HashValue = Analyze(url.strip())
+                c2addr = c2addr.split("\n")
+                for ip in c2addr:
+                    print("    ", ip)
+                HashName = ["MD5", "SHA1", "SHA256", "SHA512"]            
+                for name, value in zip(HashName, HashValue):
+                    print(name, " : ", value)
+    else:
+        continue
+    print("-*-*-*-*-*-*-*-*-*-*")
+
+</code></pre>
+	</section>
+	<section>
+		<h3>実行結果</h3>
+		<pre><code data-line-numbers="1|2-16|17-18|19-31|32-35|36-100">日付： 6月30日
+ツイート本文：
+6月30日もEmotetへの感染を狙ったメールがばらまかれています
+
+添付ファイルはzip（中にxls）またはxls
+epoch4
+xls
+https://t.co/sCfngDaPAH
+ModifyDate:2022-6-29… https://t.co/1lAxxPTDyE
+     6月30日もEmotetへの感染を狙ったメールがばらまかれています
+     
+     添付ファイルはzip（中にxls）またはxls
+     epoch4
+     xls
+     https://t.co/sCfngDaPAH
+     ModifyDate:2022-6-29… https://t.co/1lAxxPTDyE
+添付URL：
+     https://tria.ge/220629-z1n9kaegb6
+通信先C2サーバ：
+     https://www.mobiles-photostudio.com/MPS/uYUKsZhII1qQ1/
+     https://www.zablimconsultancy.co.ke/musagala/pmOVrwAwG/
+     http://www.kspintidana.com/wp-admin/jjiOcQAL/
+     http://www.garantihaliyikama.com/wp-admin/CcxWGjZEjriZ9zMdsP/
+     172.104.251.154:8080
+     51.161.73.194:443
+
+	    << snip >>
+
+     45.235.8.30:8080
+     158.69.222.101:443
+     159.89.202.34:443
+MD5  :  bca774464f52e484a93f3841124758a1
+SHA1  :  1bf6b435f6389af53744e960dac2e643eaac4192
+SHA256  :  c45bf0bf43d9595be252f2646198e686ee50df78f2eafd8fd58f5fda324db8b5
+SHA512  :  21c3b41f831ff41d1a81d926c85fcdec6be37699d02665d8db2826a7c360646cc338a7e4ac30871420528ae1cf4819a911c38129ef7c70b3c83221763390c257
+-*-*-*-*-*-*-*-*-*-*
+日付： 6月29日
+ツイート本文：
+6月29日のEmotetへの感染を狙ったメールのばらまき状況です。
+epoch4
+前日に引き続き、各国や地域の昼間の時間帯にあわせたばらまきが続いています。
+添付はzip（中にxls）またはxls
+
+epoch5
+ばらまきは15時… https://t.co/imeLJKAJ7G
+     6月29日のEmotetへの感染を狙ったメールのばらまき状況です。
+     epoch4
+     前日に引き続き、各国や地域の昼間の時間帯にあわせたばらまきが続いています。
+     添付はzip（中にxls）またはxls
+     
+     epoch5
+     ばらまきは15時… https://t.co/imeLJKAJ7G
+添付URL：
+-*-*-*-*-*-*-*-*-*-*
+日付： 6月29日
+ツイート本文：
+6月29日もEmotetへの感染を狙ったメールがばらまかれています。
+epoch4
+添付はzip(中にxls)またはxls
+xls
+https://t.co/sDmNYmPPId
+2022-6-28 12:45:01
+
+xls… https://t.co/ugBlNpsOL6
+     6月29日もEmotetへの感染を狙ったメールがばらまかれています。
+     epoch4
+     添付はzip(中にxls)またはxls
+     xls
+     https://t.co/sDmNYmPPId
+     2022-6-28 12:45:01
+     
+     xls… https://t.co/ugBlNpsOL6
+添付URL：
+     https://tria.ge/220628-zgqy2scbek
+通信先C2サーバ：
+     https://ewingconsulting.com/wp-includes/B4ZzwwImcXf6w8/
+     https://asaferefuge.org/wp-admin/2LO/
+     http://cashmailsystem.com/upload/yRC05/
+     http://advanzabpo.com/fonts/K1cXL8XJarbXYL0Spr/
+     172.104.251.154:8080
+     51.161.73.194:443
+
+	    << snip >>
+
+     1.234.2.232:8080
+     45.235.8.30:8080
+     158.69.222.101:443
+     159.89.202.34:443
+     
+MD5  :  abbd3826f4fc03acad05dfecab5389e9
+SHA1  :  1dd07613f9ec1526340c6a63ed848a48d570bba6
+SHA256  :  a2bf406949ed945318b84b7f1139731f7a0da1ee2f0252a534ec0efcba35bdf1
+SHA512  :  c8ab2cee002671f2b9c90edcc05fcf397a473caa431ab01f86edcd674d1fa819f059ca8314fbfc4ef5b11a0f713b278d41b6763a75e1381007e50356193ddd70
+
+    << snip >>
+
+</code></pre>
+        <a href="https://twitter.com/i/web/status/1542256016305164288">https://twitter.com/i/web/status/1542256016305164288</a>
+	</section>
+</section>
+
+<section>
+	<section><h2>wordcloud</h2></section>
+	<section>
+		<h3>ソースコード</h3>
+		<pre><code data-line-numbers="|54-56">from janome.analyzer import Analyzer
+from janome.tokenfilter import POSKeepFilter
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+from bs4 import BeautifulSoup
+import sys
+import io
+from TWITTERAPIKEY import consumer_key, consumer_secret, \
+                            access_token, access_token_secret
+from getRedirect import GetRedirectUrl # https://qiita.com/niwasawa/items/d3f5ceb5f2f9d8784571
+import tweepy
+import re
+from urllib import request
+
+
+def show_wordcloud(text):
+    font_path = "./ipaexm.ttf"
+    wordcloud = WordCloud(
+        background_color='white',  # 背景色
+        font_path=font_path,  # フォントのパス
+        width=1500,  # 横幅
+        height=1000,  # 高さ
+    )
+    wordcloud.generate(text)
+    plt.figure(figsize=(45, 30))  # figsize=(横幅, 高さ)
+    plt.imshow(wordcloud)
+    plt.axis('off')
+    plt.show()  # 表示
+    plt.savefig(f"./out/{filename}.png")
+
+auth = tweepy.OAuthHandler(consumer_key,consumer_secret)
+auth.set_access_token(access_token,access_token_secret)
+api = tweepy.API(auth)
+N = 100
+filename = "0002"
+since = "2022-06-27"
+until = "2022-06-28"
+q = f"emotet lang:ja since:2021-11-13 until:2021-11-17"
+USERs = ["sugimu_sec", "abel1ma", "catnap707", "bomccss", "58_158_177_102"]
+
+L = []
+for user in USERs:
+    l = tweepy.Cursor(api.user_timeline, id=user, include_entities=True).items(N)
+    L += [tweet.text for tweet in l]
+
+URLpattern = r"https?://[\w!?/+\-_~;.,*&@#$%()'[\]]+"
+s = ""
+
+for l in L:
+    print(l)
+    s += l
+
+text = s
+RemoveWords = ["https://t.co/", "hxxps", "hxxp", "RT @"]
+WordsEmotet = ["new Emotet", "epoch4", "epoch5", "Emotet E4", " E4 "]
+#RemoveWords += WordsEmotet
+
+for rw in RemoveWords:
+    text = text.replace(rw, "")
+
+
+print(text)
+show_wordcloud(text)
+
+</code></pre>
+	</section>
+</section>
 			</div>
 		</div>
 
